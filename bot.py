@@ -26,7 +26,7 @@ while True:
                 f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                 data={
                     "chat_id": chat_id,
-                    "text": "היי ❤️ הבוט עובד!"
+                    "text": "Hi ❤️ The bot is working!"
                 }
             )
 
