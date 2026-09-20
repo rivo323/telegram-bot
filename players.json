@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Rush</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: white;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .game {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .balance {
+            margin-top: 20px;
+            background: #1f2937;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .coins {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .coin {
+            width: 210px;
+            height: 210px;
+            margin: 35px auto;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffd700, #f59e0b);
+            border: 8px solid #fbbf24;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 90px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.08s;
+        }
+
+        .coin:active {
+            transform: scale(0.94);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: #1f2937;
+            border-radius: 16px;
+            padding: 15px;
+        }
+
+        .card-title {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #374151;
+            color: white;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .message {
+            margin-top: 18px;
+            min-height: 24px;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="title">🪙 COIN RUSH</div>
+
+    <div class="balance">
+        <div>YOUR BALANCE</div>
+        <div class="coins" id="coins">0</div>
+        <div>🪙 Coins</div>
+    </div>
+
+    <div class="coin" id="coin">
+        🪙
+    </div>
+
+    <div class="stats">
+
+        <div class="card">
+            <div class="card-title">⚡ POWER</div>
+            <div class="card-value" id="power">1</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">👆 TAPS</div>
+            <div class="card-value" id="taps">0</div>
+        </div>
+
+    </div>
+
+    <div class="buttons">
+
+        <button onclick="upgrade()">
+            ⚡ Upgrade
+        </button>
+
+        <button onclick="daily()">
+            🎁 Daily Bonus
+        </button>
+
+        <button onclick="businesses()">
+            🏢 Businesses
+        </button>
+
+        <button onclick="stats()">
+            🏆 My Stats
+        </button>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+</div>
+
+<script>
+
+    const tg = window.Telegram.WebApp;
+
+    tg.ready();
+    tg.expand();
+
+    let coins = 0;
+    let power = 1;
+    let taps = 0;
+
+    const coinsElement = document.getElementById("coins");
+    const powerElement = document.getElementById("power");
+    const tapsElement = document.getElementById("taps");
+    const messageElement = document.getElementById("message");
+
+    function updateScreen() {
+        coinsElement.textContent = coins.toLocaleString();
+        powerElement.textContent = power;
+        tapsElement.textContent = taps.toLocaleString();
+    }
+
+    document.getElementById("coin").addEventListener("click", function () {
+
+        coins += power;
+        taps++;
+
+        updateScreen();
+
+        messageElement.textContent = "+" + power + " 🪙";
+
+        setTimeout(() => {
+            messageElement.textContent = "";
+        }, 500);
+
+    });
+
+    function upgrade() {
+
+        const cost = power * 100;
+
+        if (coins < cost) {
+            messageElement.textContent =
+                "❌ Need " + cost.toLocaleString() + " Coins";
+            return;
+        }
+
+        coins -= cost;
+        power++;
+
+        updateScreen();
+
+        messageElement.textContent =
+            "🎉 Upgrade complete!";
+    }
+
+    function daily() {
+
+        coins += 500;
+
+        updateScreen();
+
+        messageElement.textContent =
+            "🎁 +500 Coins!";
+    }
+
+    function businesses() {
+
+        messageElement.textContent =
+            "🏢 Businesses coming soon!";
+    }
+
+    function stats() {
+
+        messageElement.textContent =
+            "🏆 You have " +
+            coins.toLocaleString() +
+            " Coins and " +
+            taps.toLocaleString() +
+            " taps.";
+    }
+
+    updateScreen();
+
+</script>
+
+</body>
+</html>
