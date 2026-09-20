@@ -1,38 +1,65 @@
 import os
-import requests
+import json
 import time
+import requests
 
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 API = f"https://api.telegram.org/bot{TOKEN}"
 
+DATA_FILE = "players.json"
 offset = 0
 
-# Players are stored while the bot is running
-players = {}
+
+# -------------------------
+# Load players
+# -------------------------
+
+if os.path.exists(DATA_FILE):
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as file:
+            players = json.load(file)
+    except:
+        players = {}
+else:
+    players = {}
+
+
+def save_players():
+    with open(DATA_FILE, "w", encoding="utf-8") as file:
+        json.dump(players, file, ensure_ascii=False, indent=2)
 
 
 def get_player(chat_id):
+    chat_id = str(chat_id)
+
     if chat_id not in players:
         players[chat_id] = {
             "coins": 0,
             "power": 1
         }
+        save_players()
+
     return players[chat_id]
 
 
 def send_message(chat_id, text, keyboard=None):
+
     data = {
         "chat_id": chat_id,
         "text": text
     }
 
     if keyboard:
-        data["reply_markup"] = keyboard
+        data["reply_markup"] = json.dumps(keyboard)
 
-    requests.post(f"{API}/sendMessage", json=data)
+    requests.post(
+        f"{API}/sendMessage",
+        data=data
+    )
 
 
 def main_menu(chat_id):
+
     player = get_player(chat_id)
 
     keyboard = {
@@ -54,8 +81,14 @@ def main_menu(chat_id):
     )
 
 
+# -------------------------
+# Bot
+# -------------------------
+
 while True:
+
     try:
+
         response = requests.get(
             f"{API}/getUpdates",
             params={
@@ -67,6 +100,7 @@ while True:
         data = response.json()
 
         for update in data.get("result", []):
+
             offset = update["update_id"] + 1
 
             message = update.get("message")
@@ -81,11 +115,15 @@ while True:
 
             # START
             if text == "/start":
+
                 main_menu(chat_id)
 
             # TAP
             elif text == "🪙 TAP!":
+
                 player["coins"] += player["power"]
+
+                save_players()
 
                 send_message(
                     chat_id,
@@ -95,19 +133,25 @@ while True:
 
             # UPGRADE
             elif text == "⚡ Upgrade":
+
                 price = player["power"] * 100
 
                 if player["coins"] >= price:
+
                     player["coins"] -= price
                     player["power"] += 1
+
+                    save_players()
 
                     send_message(
                         chat_id,
                         f"🚀 UPGRADE!\n\n"
-                        f"Your power is now ⚡ {player['power']}\n"
-                        f"💰 Coins left: {player['coins']}"
+                        f"⚡ Power: {player['power']}\n"
+                        f"💰 Coins: {player['coins']}"
                     )
+
                 else:
+
                     send_message(
                         chat_id,
                         f"❌ Not enough coins!\n\n"
@@ -117,7 +161,10 @@ while True:
 
             # DAILY BONUS
             elif text == "🎁 Daily Bonus":
+
                 player["coins"] += 100
+
+                save_players()
 
                 send_message(
                     chat_id,
@@ -127,6 +174,7 @@ while True:
 
             # STATS
             elif text == "🏆 My Stats":
+
                 send_message(
                     chat_id,
                     f"🏆 YOUR STATS\n\n"
@@ -134,16 +182,18 @@ while True:
                     f"⚡ Power: {player['power']}"
                 )
 
-            # UNKNOWN MESSAGE
             else:
+
                 send_message(
                     chat_id,
-                    "👋 Welcome to Coin Rush!\n\n"
-                    "Press 🪙 TAP! to start earning coins."
+                    "💰 Welcome to Coin Rush!\n\n"
+                    "Press 🪙 TAP! to earn coins."
                 )
 
         time.sleep(1)
 
-    except Exception as e:
-        print("Error:", e)
+    except Exception as error:
+
+        print("Error:", error)
+
         time.sleep(5)
